@@ -1,0 +1,26 @@
+{
+  "name": "agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "bn.js": "^5.2.5",
+    "dotenv": "^18.0.9",
+    "near-api-js": "^4.0.4",
+    "node-cron": "^4.6.0"
+  },
+  "type": "module"
+}
