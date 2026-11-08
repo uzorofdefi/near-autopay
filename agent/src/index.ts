@@ -23,8 +23,8 @@ interface PeriodRecord {
 }
 
 const PAYROLL_SCHEDULE: WorkerPayout[] = [
-  { account_id: 'bob.testnet', amount: '50000000000000000000000' },
-  { account_id: 'alice.testnet', amount: '50000000000000000000000' },
+  { account_id: 'bob.testnet', amount: '10000000000000000000000' },
+  { account_id: 'alice.testnet', amount: '10000000000000000000000' },
 ];
 
 // ---------- Settings (all can be changed from environment variables) ----------
