@@ -246,6 +246,7 @@ function startStatusServer(): void {
 
 // ---------- Start ----------
 console.log('⚡️ NEAR AutoPay Agent daemon started. Waiting for schedule trigger...');
+console.log('🔑 Agent key: ' + (process.env.AGENT_PRIVATE_KEY ? KeyPair.fromString(process.env.AGENT_PRIVATE_KEY).getPublicKey().toString() : 'not set'));
 
 // Test mode: RUN_NOW=true npx tsx src/index.ts   (add FORCE=true to ignore the guard)
 if (process.env.RUN_NOW === 'true') {

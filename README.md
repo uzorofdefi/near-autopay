@@ -2,7 +2,7 @@
 
 **Automated, on-chain payroll for the NEAR blockchain.** A scheduled agent runs 24/7 in the cloud and triggers batch payouts from a treasury smart contract, so workers get paid on time without anyone pressing a button.
 
-- **Live status page:** LIVE_URL_HERE
+- **Live status page:** near-autopay-production.up.railway.app
 - **Demo video:** VIDEO_URL_HERE
 - **Network:** NEAR testnet
 - **License:** MIT
