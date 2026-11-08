@@ -3,6 +3,7 @@ dotenv.config();
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as http from 'http';
 import cron from 'node-cron';
 import BN from 'bn.js';
 import * as rawNearAPI from 'near-api-js';
@@ -28,11 +29,14 @@ const PAYROLL_SCHEDULE: WorkerPayout[] = [
 ];
 
 // ---------- Settings (all can be changed from environment variables) ----------
-// Default: 9am on the 1st of each month. For a demo, set CRON_SCHEDULE="*/5 * * * *"
 const CRON_SCHEDULE = process.env.CRON_SCHEDULE || '0 9 1 * *';
 const CRON_TIMEZONE = process.env.CRON_TIMEZONE || 'UTC';
-// On a server, point STATE_FILE at a persistent volume, e.g. /data/autopay-state.json
 const STATE_FILE = process.env.STATE_FILE || path.join(process.cwd(), '.autopay-state.json');
+const RPC_URL = process.env.NEAR_RPC_URL || 'https://rpc.testnet.fastnear.com';
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const EXPLORER = process.env.NEAR_NETWORK === 'mainnet'
+  ? 'https://nearblocks.io'
+  : 'https://testnet.nearblocks.io';
 
 // ---------- Duplicate-payment guard ----------
 function currentPeriod(): string {
@@ -99,7 +103,7 @@ async function executePayroll(): Promise<void> {
     const near = await connect({
       networkId,
       keyStore,
-      nodeUrl: process.env.NEAR_RPC_URL || 'https://rpc.testnet.fastnear.com',
+      nodeUrl: RPC_URL,
     });
 
     const agentAccount = await near.account(agentAccountId);
@@ -120,7 +124,7 @@ async function executePayroll(): Promise<void> {
 
     console.log('✅ Batch Payout Successful!');
     console.log('🔗 Transaction Hash: ' + txHash);
-    console.log('🔎 Explorer: https://testnet.nearblocks.io/txns/' + txHash);
+    console.log('🔎 Explorer: ' + EXPLORER + '/txns/' + txHash);
   } catch (error) {
     // Marked failed so it can be retried. If the error was a timeout, check the
     // explorer first: the transaction may have landed anyway.
@@ -130,6 +134,117 @@ async function executePayroll(): Promise<void> {
   }
 }
 
+// ---------- Public status page (for judges and demos) ----------
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatNear(yocto: string): string {
+  const big = BigInt(yocto);
+  const base = BigInt('1000000000000000000000000');
+  const whole = big / base;
+  const frac = (big % base) / BigInt('100000000000000000000');
+  return whole.toString() + '.' + frac.toString().padStart(4, '0');
+}
+
+async function getBalance(accountId: string): Promise<string> {
+  try {
+    const res = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'query',
+        params: { request_type: 'view_account', finality: 'final', account_id: accountId },
+      }),
+    });
+    const data: any = await res.json();
+    const yocto = data && data.result ? data.result.amount : undefined;
+    if (!yocto) return 'unavailable';
+    return formatNear(yocto) + ' NEAR';
+  } catch {
+    return 'unavailable';
+  }
+}
+
+async function renderStatusPage(): Promise<string> {
+  const treasury = process.env.TREASURY_CONTRACT_ID || '(not set)';
+  const balance = process.env.TREASURY_CONTRACT_ID ? await getBalance(treasury) : 'unavailable';
+  const state = loadState();
+  const periods = Object.keys(state).sort().reverse();
+
+  const workerRows = PAYROLL_SCHEDULE.map(function (w) {
+    return '<tr><td>' + escapeHtml(w.account_id) + '</td><td>' + formatNear(w.amount) + ' NEAR</td></tr>';
+  }).join('');
+
+  const historyRows = periods.length === 0
+    ? '<tr><td colspan="4">No payments recorded yet.</td></tr>'
+    : periods.map(function (p) {
+        const r = state[p];
+        const tx = r.txHash
+          ? '<a href="' + EXPLORER + '/txns/' + escapeHtml(r.txHash) + '" target="_blank" rel="noopener">' +
+            escapeHtml(r.txHash.slice(0, 10)) + '...</a>'
+          : '-';
+        return '<tr><td>' + escapeHtml(p) + '</td><td>' + escapeHtml(r.status) + '</td><td>' +
+          escapeHtml(r.at) + '</td><td>' + tx + '</td></tr>';
+      }).join('');
+
+  return [
+    '<!doctype html><html lang="en"><head><meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<title>NEAR AutoPay</title>',
+    '<style>',
+    'body{font-family:system-ui,sans-serif;background:#0b0f1a;color:#e8ecf5;margin:0;padding:24px;}',
+    '.wrap{max-width:760px;margin:0 auto;}',
+    'h1{margin:0 0 4px;font-size:28px;} .sub{color:#9aa6c2;margin-bottom:24px;}',
+    '.card{background:#141a2b;border:1px solid #232c47;border-radius:12px;padding:16px 20px;margin-bottom:16px;}',
+    '.card h2{margin:0 0 10px;font-size:16px;color:#9aa6c2;font-weight:600;}',
+    'table{width:100%;border-collapse:collapse;} td,th{text-align:left;padding:8px 6px;border-bottom:1px solid #232c47;font-size:14px;}',
+    'a{color:#6cc4ff;} .ok{color:#4ade80;font-weight:600;}',
+    '</style></head><body><div class="wrap">',
+    '<h1>NEAR AutoPay</h1>',
+    '<div class="sub">Autonomous payroll agent: a scheduled agent triggers batch payouts from an on-chain treasury.</div>',
+    '<div class="card"><h2>Agent status</h2><span class="ok">Running</span> &middot; schedule "' +
+      escapeHtml(CRON_SCHEDULE) + '" (' + escapeHtml(CRON_TIMEZONE) + ')</div>',
+    '<div class="card"><h2>Treasury</h2>Account: <a href="' + EXPLORER + '/address/' + escapeHtml(treasury) +
+      '" target="_blank" rel="noopener">' + escapeHtml(treasury) + '</a><br>Balance: ' + escapeHtml(balance) + '</div>',
+    '<div class="card"><h2>Payroll recipients</h2><table><tr><th>Account</th><th>Amount per period</th></tr>' +
+      workerRows + '</table></div>',
+    '<div class="card"><h2>Payment history</h2><table><tr><th>Period</th><th>Status</th><th>Time (UTC)</th><th>Transaction</th></tr>' +
+      historyRows + '</table></div>',
+    '<div class="sub">Network: ' + escapeHtml(process.env.NEAR_NETWORK || 'testnet') +
+      '. Each period can be paid only once: the agent records it before sending.</div>',
+    '</div></body></html>',
+  ].join('');
+}
+
+function startStatusServer(): void {
+  const server = http.createServer(async function (req, res) {
+    if (req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+    try {
+      const html = await renderStatusPage();
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('status page error');
+    }
+  });
+  server.listen(PORT, '0.0.0.0', function () {
+    console.log('🌐 Status page listening on port ' + PORT);
+  });
+}
+
+// ---------- Start ----------
 console.log('⚡️ NEAR AutoPay Agent daemon started. Waiting for schedule trigger...');
 
 // Test mode: RUN_NOW=true npx tsx src/index.ts   (add FORCE=true to ignore the guard)
@@ -144,4 +259,5 @@ if (process.env.RUN_NOW === 'true') {
   cron.schedule(CRON_SCHEDULE, async () => {
     await executePayroll();
   }, { timezone: CRON_TIMEZONE });
+  startStatusServer();
 }
