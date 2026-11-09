@@ -68,8 +68,24 @@ async function showAccount(address: string | null): Promise<void> {
   el("account").textContent = "Connected: " + address + " | Balance: " + balance;
 }
 
+async function addressOf(wallet: any, accounts?: any[]): Promise<string | null> {
+  if (accounts && accounts.length > 0) {
+    const a: any = accounts[0];
+    return typeof a === "string" ? a : a.accountId;
+  }
+  if (wallet && typeof wallet.getAccounts === "function") {
+    const list: any = await wallet.getAccounts();
+    if (list && list.length > 0) return list[0].accountId || list[0];
+  }
+  if (wallet && typeof wallet.getAddress === "function") {
+    return await wallet.getAddress();
+  }
+  return null;
+}
+
 connector.on("wallet:signIn", async (event: any) => {
-  const address = await event.wallet.getAddress();
+  console.log("signIn event", event);
+  const address = await addressOf(event.wallet, event.accounts);
   await showAccount(address);
 });
 
@@ -80,7 +96,7 @@ connector.on("wallet:signOut", async () => {
 async function restoreSession(): Promise<void> {
   try {
     const wallet = await connector.wallet();
-    const address = await wallet.getAddress();
+    const address = await addressOf(wallet);
     await showAccount(address);
   } catch (error) {
     // not signed in yet
