@@ -225,6 +225,22 @@ async function renderStatusPage(): Promise<string> {
 
 function startStatusServer(): void {
   const server = http.createServer(async function (req, res) {
+    if (req.url === '/api/status') {
+      const state = loadState();
+      const history = Object.keys(state).sort().reverse().map(function (p) {
+        return { period: p, status: state[p].status, at: state[p].at, txHash: state[p].txHash || null };
+      });
+      const body = JSON.stringify({
+        treasury: process.env.TREASURY_CONTRACT_ID || null,
+        schedule: CRON_SCHEDULE,
+        timezone: CRON_TIMEZONE,
+        recipients: PAYROLL_SCHEDULE,
+        history: history,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(body);
+      return;
+    }
     if (req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end('ok');

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEAR AutoPay Dashboard</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0b0f1a;color:#e8ecf5;margin:0;padding:24px}
+.wrap{max-width:760px;margin:0 auto}
+h1{margin:0 0 4px;font-size:28px}
+.sub{color:#9aa6c2;margin-bottom:24px}
+.card{background:#141a2b;border:1px solid #232c47;border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.card h2{margin:0 0 10px;font-size:16px;color:#9aa6c2;font-weight:600}
+button{background:#3b82f6;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer}
+button.secondary{background:#232c47}
+input{background:#0b0f1a;color:#e8ecf5;border:1px solid #232c47;border-radius:8px;padding:10px;font-size:14px;width:140px}
+table{width:100%;border-collapse:collapse}
+td,th{text-align:left;padding:8px 6px;border-bottom:1px solid #232c47;font-size:14px}
+a{color:#6cc4ff}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.err{color:#f87171}
+.ok{color:#4ade80}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>NEAR AutoPay</h1>
+<div class="sub">Founder dashboard (testnet)</div>
+<div class="card"><h2>Wallet</h2>
+<div class="row"><button id="connect">Connect wallet</button><button id="disconnect" class="secondary" style="display:none">Disconnect</button></div>
+<div id="account" style="margin-top:10px">Not connected</div>
+</div>
+<div class="card"><h2>Treasury</h2>
+<div>Account: <a id="treasury-link" target="_blank" rel="noopener"></a></div>
+<div>Balance: <span id="treasury-balance">...</span></div>
+</div>
+<div class="card"><h2>Deposit into treasury</h2>
+<div class="row"><input id="amount" placeholder="Amount in NEAR" value="0.1"><button id="deposit">Deposit</button></div>
+<div id="status" style="margin-top:10px"></div>
+</div>
+<div class="card"><h2>Payroll recipients</h2><div id="recipients">Loading...</div></div>
+<div class="card"><h2>Payment history</h2><div id="history">Loading...</div></div>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
