@@ -163,12 +163,47 @@ function table(headers: string[], rows: (string | HTMLElement)[][]): HTMLElement
   return t;
 }
 
+function showSchedule(cron: string, timezone: string): void {
+  const target = el("schedule");
+  const parts = String(cron).trim().split(/\s+/);
+  const monthly =
+    parts.length === 5 &&
+    /^\d+$/.test(parts[0]) &&
+    /^\d+$/.test(parts[1]) &&
+    /^\d+$/.test(parts[2]) &&
+    parts[3] === "*" &&
+    parts[4] === "*";
+  if (!monthly || timezone !== "UTC" || Number(parts[2]) < 1 || Number(parts[2]) > 28) {
+    target.textContent = "Schedule: " + cron + " (" + timezone + ")";
+    return;
+  }
+  const minute = Number(parts[0]);
+  const hour = Number(parts[1]);
+  const day = Number(parts[2]);
+  const now = new Date();
+  let next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day, hour, minute));
+  if (next.getTime() <= now.getTime()) {
+    next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, day, hour, minute));
+  }
+  const when = next.toLocaleString("en-GB", {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  target.textContent = "Next payday: " + when + " UTC (monthly, set by the agent operator)";
+}
+
 async function loadAgent(): Promise<void> {
   try {
     const res = await fetch(AGENT_URL + "/api/status");
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data: any = await res.json();
 
+    showSchedule(data.schedule, data.timezone);
     const rec = el("recipients");
     rec.textContent = "";
     rec.appendChild(
@@ -204,6 +239,7 @@ async function loadAgent(): Promise<void> {
       );
     }
   } catch (error) {
+    el("schedule").textContent = "Agent data not available yet.";
     el("recipients").textContent = "Agent data not available yet.";
     el("history").textContent = "Agent data not available yet.";
   }

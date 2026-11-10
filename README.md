@@ -22,7 +22,7 @@ Paying a team in crypto is manual and easy to get wrong: someone has to remember
 
 ## What it does
 
-- **Scheduled payroll.** The agent runs on a cron schedule (default: 9am UTC on the 1st of every month) and calls the treasury contract's `batch_payout` method.
+- **Scheduled payroll.** The agent runs on a cron schedule (default: 9am UTC on the 1st of every month) and calls the treasury contract's `batch_payout` method. The operator sets the pay date with the `CRON_SCHEDULE` setting, and the dashboard shows the next payday.
 - **Batch payouts.** One transaction pays every recipient on the payroll list.
 - **Duplicate-payment guard.** Before sending, the agent records the pay period as pending. A period that is already paid (or stuck pending after a crash) is never paid again, even after restarts, because the record is stored on a persistent volume.
 - **Founder dashboard.** Connect a NEAR wallet, see the treasury balance and your own balance, deposit NEAR into the treasury (signed in your wallet), and view the payroll recipients and payment history with explorer links.
@@ -141,7 +141,7 @@ Open http://localhost:5173. The treasury account and agent address are set at th
 
 ## Roadmap
 
-- Store the worker list on-chain, so the agent reads the current payroll instead of a fixed list, and founders can add and remove workers from the dashboard.
+- Founder-editable pay date and worker list, stored on the treasury contract, so a founder can change payday and add or remove workers from the dashboard. Today the pay date is set by the operator with the `CRON_SCHEDULE` setting, and the dashboard shows the next payday.
 - Enforce one payout per period inside the contract.
 - Pay in stablecoins (USDC) and accept funding from any chain through NEAR Intents.
 - Mainnet deployment (the restricted agent key is already used on testnet).
