@@ -3,45 +3,122 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NEAR AutoPay Dashboard</title>
+<title>AutoPay | NEAR payroll treasury</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23174d3b'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-body{font-family:system-ui,sans-serif;background:#0b0f1a;color:#e8ecf5;margin:0;padding:24px}
-.wrap{max-width:760px;margin:0 auto}
-h1{margin:0 0 4px;font-size:28px}
-.sub{color:#9aa6c2;margin-bottom:24px}
-.card{background:#141a2b;border:1px solid #232c47;border-radius:12px;padding:16px 20px;margin-bottom:16px}
-.card h2{margin:0 0 10px;font-size:16px;color:#9aa6c2;font-weight:600}
-button{background:#3b82f6;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer}
-button.secondary{background:#232c47}
-input{background:#0b0f1a;color:#e8ecf5;border:1px solid #232c47;border-radius:8px;padding:10px;font-size:14px;width:140px}
+:root{--bg:#f6f6f1;--ink:#12261e;--muted:#5d6e65;--green:#174d3b;--green-2:#1f6049;--mint:#e2f1e8;--line:#e4e7df;--card:#ffffff;--danger:#b42318;--ok:#157347}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+a{color:var(--green-2)}
+.nav{position:sticky;top:0;z-index:10;background:rgba(246,246,241,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1120px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{font-size:26px;font-weight:800;color:var(--green);letter-spacing:-.5px;text-decoration:none}
+.brand span{color:#3fae7a}
+.links{display:flex;gap:6px;flex-wrap:wrap}
+.links a{padding:8px 16px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px}
+.links a:hover,.links a.active{background:var(--mint);color:var(--green)}
+.pill{padding:7px 14px;border-radius:999px;background:var(--mint);color:var(--green);font-weight:700;font-size:13px;white-space:nowrap}
+.pill.plain{background:#fff;border:1px solid var(--line)}
+main{max-width:1120px;margin:0 auto;padding:36px 24px 64px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:44px;line-height:1.1;margin:6px 0 8px;color:var(--green);letter-spacing:-1px}
+.lead{color:var(--muted);font-size:17px;margin:0 0 28px;max-width:640px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+.hero{position:relative;overflow:hidden;background:var(--green);color:#fff;border-radius:28px;padding:36px;min-height:340px}
+.hero::before{content:"";position:absolute;right:-90px;top:-90px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hero::after{content:"";position:absolute;left:30%;bottom:-150px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.05)}
+.rel{position:relative;z-index:1}
+.small{font-size:15px;color:rgba(255,255,255,.75);font-weight:500}
+.balance{font-size:56px;font-weight:800;letter-spacing:-1.5px;margin:10px 0 20px;line-height:1.1}
+.chip{display:inline-block;padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.12);font-weight:600;font-size:14px;margin:0 8px 8px 0}
+.hero hr{border:0;border-top:1px solid rgba(255,255,255,.18);margin:24px 0 16px}
+.acct{color:#fff;font-weight:700;font-size:18px;word-break:break-all}
+.card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:28px}
+.card h2{margin:4px 0 8px;font-size:26px;color:var(--green);letter-spacing:-.4px}
+.desc{color:var(--muted);margin:0 0 20px}
+.label{display:block;font-weight:700;margin-bottom:8px}
+.field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+.field span{padding:0 18px;background:var(--bg);color:var(--green);font-weight:800;display:flex;align-items:center}
+.field input{flex:1;border:0;outline:0;padding:16px;font-size:18px;font-weight:600;font-family:inherit;color:var(--ink);width:100%;background:#fff}
+.btn{background:var(--green);color:#fff;border:0;border-radius:16px;padding:15px 22px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--green-2)}
+.btn.block{width:100%;margin-top:16px}
+.btn.ghost{background:var(--mint);color:var(--green)}
+.note{color:var(--muted);font-size:13px;margin:14px 0 0}
+#status{margin-top:14px;font-weight:600;font-size:14px}
+.ok{color:var(--ok)}
+.err{color:var(--danger)}
+.wallet{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:24px;padding:22px 28px}
+#account{font-weight:600;word-break:break-word}
+.big{font-size:20px;font-weight:700;color:var(--ink)}
+section.block{margin-top:24px}
+#recipients,#history{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-td,th{text-align:left;padding:8px 6px;border-bottom:1px solid #232c47;font-size:14px}
-a{color:#6cc4ff}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.err{color:#f87171}
-.ok{color:#4ade80}
+th{text-align:left;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:10px 8px;border-bottom:1px solid var(--line)}
+td{padding:14px 8px;border-bottom:1px solid var(--line);font-size:15px}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.foot{margin-top:40px;color:var(--muted);font-size:14px;display:flex;gap:18px;flex-wrap:wrap}
+@media(max-width:900px){.grid,.grid2{grid-template-columns:1fr}h1{font-size:34px}.balance{font-size:44px}.links{display:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<h1>NEAR AutoPay</h1>
-<div class="sub">Founder dashboard (testnet)</div>
-<div class="card"><h2>Wallet</h2>
-<div class="row"><button id="connect">Connect wallet</button><button id="disconnect" class="secondary" style="display:none">Disconnect</button></div>
-<div id="account" style="margin-top:10px">Not connected</div>
+<header class="nav"><div class="nav-inner">
+<a class="brand" href="#overview">AutoPay<span>.</span></a>
+<nav class="links"><a class="active" href="#overview">Overview</a><a href="#fund">Fund</a><a href="#payroll">Payroll</a><a href="#payments">History</a></nav>
+<div class="pill">NEAR Testnet</div>
+</div></header>
+<main>
+<section id="overview">
+<div class="top"><div>
+<div class="eyebrow">AutoPay / Treasury</div>
+<h1>Payroll Treasury</h1>
+<p class="lead">Fund the on-chain treasury and watch your automated payroll pay every worker, on schedule.</p>
+</div><div class="pill plain">Hackathon Demo</div></div>
+<div class="grid">
+<div class="hero"><div class="rel">
+<div class="small">Treasury balance</div>
+<div class="balance" id="treasury-balance">...</div>
+<span class="chip">On-chain treasury</span><span class="chip">Testnet funds</span>
+<hr>
+<div class="small">Treasury account</div>
+<a class="acct" id="treasury-link" target="_blank" rel="noopener"></a>
+</div></div>
+<div class="card" id="fund">
+<div class="eyebrow">Add funds</div>
+<h2>Fund the treasury</h2>
+<p class="desc">Deposit NEAR from your connected wallet. You approve every transaction in your own wallet, and keys never touch this site.</p>
+<label class="label" for="amount">Deposit amount (NEAR)</label>
+<div class="field"><span>NEAR</span><input id="amount" value="0.1" inputmode="decimal" autocomplete="off"></div>
+<button class="btn block" id="deposit">Deposit to treasury</button>
+<div id="status"></div>
+<p class="note">Testnet only. No real money is moved.</p>
 </div>
-<div class="card"><h2>Treasury</h2>
-<div>Account: <a id="treasury-link" target="_blank" rel="noopener"></a></div>
-<div>Balance: <span id="treasury-balance">...</span></div>
 </div>
-<div class="card"><h2>Pay schedule</h2><div id="schedule">Loading...</div><div class="sub" style="margin:8px 0 0">Editing the pay date from the dashboard is on the roadmap.</div></div>
-<div class="card"><h2>Deposit into treasury</h2>
-<div class="row"><input id="amount" placeholder="Amount in NEAR" value="0.1"><button id="deposit">Deposit</button></div>
-<div id="status" style="margin-top:10px"></div>
+<div class="card wallet">
+<div><div class="eyebrow">Your wallet</div><div id="account">Not connected</div></div>
+<div><button class="btn" id="connect">Connect wallet</button><button class="btn ghost" id="disconnect" style="display:none">Disconnect</button></div>
 </div>
-<div class="card"><h2>Payroll recipients</h2><div id="recipients">Loading...</div></div>
-<div class="card"><h2>Payment history</h2><div id="history">Loading...</div></div>
-</div>
+</section>
+<section id="payroll" class="grid2">
+<div class="card"><div class="eyebrow">Pay schedule</div><h2>Next payday</h2>
+<div class="big" id="schedule">Monthly, on the 1st at 09:00 UTC</div>
+<p class="note">Today the operator sets the pay date. A founder-editable pay date is on the roadmap.</p></div>
+<div class="card"><div class="eyebrow">Payroll</div><h2>Recipients</h2><div id="recipients">Loading...</div></div>
+</section>
+<section id="payments" class="block">
+<div class="card"><div class="eyebrow">Payments</div><h2>Payment history</h2><div id="history">Loading...</div></div>
+</section>
+<div class="foot"><span>Built for NEAR HACKATHON 2026</span>
+<a href="https://github.com/uzorofdefi/near-autopay" target="_blank" rel="noopener">Source code (MIT)</a>
+<a href="https://near-autopay-production.up.railway.app" target="_blank" rel="noopener">Agent status</a></div>
+</main>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
