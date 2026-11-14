@@ -8,7 +8,8 @@
 
 | | |
 |---|---|
-| **Demo video** | VIDEO_URL_HERE |
+| **Demo video** | https://youtu.be/-P_B9e2gjAA |
+| **Verified payroll transaction** | https://testnet.nearblocks.io/txns/EKfYDARVDcibYz219gHZb3nNEYckN3rXkQyW9KmCY9r7 |
 | **Founder dashboard (live)** | https://near-autopay-dashboard.vercel.app |
 | **Agent status page (live)** | https://near-autopay-production.up.railway.app |
 | **Source code** | https://github.com/uzorofdefi/near-autopay |
@@ -69,7 +70,7 @@ No login or account is needed for steps 1 to 3.
 4. **Do:** (needs a NEAR testnet wallet with some testnet NEAR; tested with Meteor Wallet) click **Connect wallet** on the dashboard, enter `0.1`, click **Deposit**, and approve it in your wallet. Check that the receiver is `uzor-autopay.testnet`.
    **See:** "Deposit sent" with an explorer link, and the treasury balance rises by 0.1 NEAR.
 5. **Do:** run the agent locally (see below) with `RUN_NOW=true npm start` twice.
-   **See:** the first run sends the payout (or reports an error from the contract); the second run prints `already paid ... Skipping`, because each month can only be paid once.
+   **See:** if the current month has already been paid, the agent skips the payout. Otherwise, it attempts the payout and records the result. Do not use `FORCE=true` against a funded treasury unless intentionally testing another payment.
 
 The agent pays on its schedule using a restricted key that is not public. The payout recorded in the history (with its explorer link) shows the full flow: agent, treasury contract, and workers.
 
@@ -138,6 +139,8 @@ Open http://localhost:5173. The treasury account and agent address are set at th
 - The pay period is recorded before the transaction is sent, so a crash cannot lead to a second payment, and the record is stored on a persistent volume.
 - The dashboard never handles keys. Deposits are signed inside the user's wallet.
 - This is a testnet project. Before handling real funds, also enforce the one-payment-per-period rule inside the contract.
+
+**Production limitation:** This is a testnet prototype with an operator-controlled schedule and predefined recipients. The treasury contract requires an independent authorization and security review before mainnet use or handling real customer funds.
 
 ## Roadmap
 
